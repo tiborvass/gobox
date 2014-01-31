@@ -1,7 +1,7 @@
 package main
 
 import (
-	"common"
+	"github.com/tiborvass/gobox/common"
 	"flag"
 	"path/filepath"
 )

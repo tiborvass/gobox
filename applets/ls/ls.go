@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"text/tabwriter"
+	"syscall"
 )
 
 var (
@@ -61,10 +62,11 @@ func list(dir, prefix string) error {
 
 	for _, entry := range entries {
 		printEntry(entry)
-		if entry.IsDirectory() && *recursiveFlag {
-			folder := prefix + "/" + entry.Name
+		if entry.Mode().IsDir() && *recursiveFlag {
+			name := entry.Name()
+			folder := prefix + "/" + name
 			fmt.Fprintf(out, "%s:\n", folder)
-			e := list(dir+"/"+entry.Name, folder)
+			e := list(dir+"/"+name, folder)
 			if e != nil {
 				return e
 			}
@@ -73,12 +75,12 @@ func list(dir, prefix string) error {
 	return nil
 }
 
-func printEntry(e *os.FileInfo) {
+func printEntry(e os.FileInfo) {
 	fmt.Fprintf(out, "%s%s\t", e.Name, getEntryTypeString(e))
 	if *longFlag {
-		fmt.Fprintf(out, "%s\t", getModeString(e.Mode))
-		fmt.Fprintf(out, "%s\t", getSizeString(e.Size))
-		fmt.Fprintf(out, "%s\t", getUserString(e.Uid))
+		fmt.Fprintf(out, "%s\t", e.Mode())
+		fmt.Fprintf(out, "%s\t", getSizeString(e.Size()))
+		fmt.Fprintf(out, "%s\t", getUserString(e.Sys().(*syscall.Stat_t).Uid))
 	}
 	fmt.Fprintln(out, "")
 }
@@ -116,23 +118,24 @@ func getSizeString(size int64) (s string) {
 	return fmt.Sprintf("%7.3f%s", rSize, sizeSymbols[power:power+1])
 }
 
-func getEntryTypeString(e *os.FileInfo) string {
-	if e.IsDirectory() {
+func getEntryTypeString(e os.FileInfo) string {
+	mode := e.Mode()
+	if mode.IsDir() {
 		return "/"
-	} else if e.IsBlock() {
+	} else if (mode & syscall.S_IFMT) == syscall.S_IFBLK {
 		return "<>"
-	} else if e.IsFifo() {
+	} else if mode & os.ModeNamedPipe > 0 {
 		return ">>"
-	} else if e.IsSymlink() {
+	} else if mode & os.ModeSymlink > 0 {
 		return "@"
-	} else if e.IsSocket() {
+	} else if mode & os.ModeSocket > 0 {
 		return "&"
-	} else if e.IsRegular() && (e.Mode&0001 == 0001) {
+	} else if mode.IsRegular() && (mode & 0001 == 0001) {
 		return "*"
 	}
 	return ""
 }
 
-func getUserString(id int) string {
+func getUserString(id uint32) string {
 	return fmt.Sprintf("%03d", id)
 }

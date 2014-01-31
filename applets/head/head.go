@@ -1,7 +1,7 @@
 package head
 
 import (
-	"common"
+	"github.com/tiborvass/gobox/common"
 	"flag"
 	"fmt"
 	"io"

@@ -94,12 +94,13 @@ func doGzip(fn string) {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", fn, err)
 		return
 	}
-	if !fi.IsRegular() {
+	mode := fi.Mode()
+	if !mode.IsRegular() {
 		fmt.Fprintf(os.Stderr, "%s: not a regular file\n", fn)
 		return
 	}
 	newfn := fn + ".gz"
-	tfh, err := os.OpenFile(newfn, os.O_WRONLY|os.O_CREATE|os.O_EXCL, fi.Permission())
+	tfh, err := os.OpenFile(newfn, os.O_WRONLY|os.O_CREATE|os.O_EXCL, mode.Perm())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", newfn, err)
 		return
@@ -110,9 +111,9 @@ func doGzip(fn string) {
 		return
 	}
 	defer compressor.Close()
-	compressor.Mtime = uint32(fi.Mtime_ns / 1e9)
-	compressor.Name = fn
-	compressor.OS = 3 // Unix
+	compressor.Header.ModTime = fi.ModTime()
+	compressor.Header.Name = fn
+	compressor.Header.OS = 3 // Unix
 	if _, err := io.Copy(compressor, fh); err != nil {
 		fmt.Fprintf(os.Stderr, "gzip: %v\n", err)
 	}
@@ -146,7 +147,7 @@ func doGunzip(fn string) {
 	if !*forceFlag {
 		newfn = fn[0 : len(fn)-3]
 	}
-	tfh, err := os.OpenFile(newfn, os.O_WRONLY|os.O_CREATE|os.O_EXCL, fi.Permission())
+	tfh, err := os.OpenFile(newfn, os.O_WRONLY|os.O_CREATE|os.O_EXCL, fi.Mode().Perm())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", newfn, err)
 		return

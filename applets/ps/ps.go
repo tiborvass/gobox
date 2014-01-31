@@ -1,7 +1,7 @@
 package ps
 
 import (
-	"common"
+	"github.com/tiborvass/gobox/common"
 	"flag"
 	"fmt"
 	"os"

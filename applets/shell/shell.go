@@ -1,7 +1,7 @@
 package shell
 
 import (
-	"common"
+	"github.com/tiborvass/gobox/common"
 	"fmt"
 	"os"
 	"os/exec"

@@ -1,7 +1,7 @@
 package telnetd
 
 import (
-	"common"
+	"github.com/tiborvass/gobox/common"
 	"errors"
 	"flag"
 	"io"
